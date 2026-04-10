@@ -28,8 +28,9 @@ const currentMonth = computed(() => currentMonthFirst.value.getMonth())
 
 const setSelectedDate = (dateKey: string) => {
   selectedDate.value = dateKey
+  title.value = ''
+  content.value = ''
   editId.value = null
-
 }
 
 const selectedDateTodos = computed(() => {
@@ -83,7 +84,7 @@ const goToNextMonth = (): void => {
 interface Todos {
   id: number
   type: string
-  date: String
+  date: string
   title: string
   content: string
   completed: boolean
@@ -127,6 +128,8 @@ const title = ref<string>('')
 const content = ref<string>('')
 const todos = ref<Todos[]>(loadCalendarItems())
 const editId = ref<number | null>(null)
+const sortOrder = ref<'asc' | 'desc'>('desc')
+const selectItemType = ref<'todo' | 'memo' | null>(null)
 
 watch(
   todos,
@@ -146,16 +149,16 @@ const editMode = (id: number) => {
 const onSubmit = () => {
   if(!title.value.trim()) return
   if(editId.value === null) {
-    addItem(title.value, content.value, selectedDate.value) 
+    addItem(itemType.value, title.value, content.value, selectedDate.value) 
   }else{
-    editItem(editId.value, title.value, content.value, selectedDate.value)
+    editItem(itemType.value, editId.value, title.value, content.value)
   }
 }
 
-const addItem = (title: string, content: string, selectedDate: string) => {
+const addItem = (type: string, title: string, content: string, selectedDate: string) => {
   const newTodo = {
     id: Date.now(),
-    type: itemType.value,
+    type: type,
     date: selectedDate, //2000-01-01
     title: title,
     content: content,
@@ -166,9 +169,10 @@ const addItem = (title: string, content: string, selectedDate: string) => {
   todos.value.unshift(newTodo)
 }
 
-const editItem = (id: number, title: string, content: string, date: string) => {
+const editItem = (type: string, id: number, title: string, content: string) => {
   const target = todos.value.find(item => item.id === id)
   if(!target) return
+  target.type = type
   target.title = title
   target.content = content
   target.updatedAt = new Date().toISOString()
@@ -181,11 +185,47 @@ const delItem = (id: number) => {
 const formatedListDate = (id: number) => {
   const target = todos.value.find(item => item.id === id)
   if(!target) return 
-  const mm = String(target.date).slice(5, 7)
-  const dd = String(target.date).slice(8, 10)
+  const mm = target.date.slice(5, 7)
+  const dd = target.date.slice(8, 10)
   return `${mm}/${dd}`
 }
 
+const filteredSortedItems = computed(() => {
+  let crone: Todos[] = []
+  if(selectItemType.value === 'todo') {
+    crone = todos.value.filter(item => {
+      return item.type === 'todo'
+    })
+  }else if(selectItemType.value === 'memo') {
+    crone = todos.value.filter(item => {
+      return item.type === 'memo'
+    })
+  }else {
+    crone = [...todos.value]
+  }
+
+  return crone.sort((a, b) => {
+    console.log(a.date)
+    const timeA = new Date(a.date).getTime()
+    const timeB = new Date(b.date).getTime()
+    return sortOrder.value === 'asc' ? timeA - timeB : timeB - timeA
+
+  })
+})
+
+const toggleSortOrder = () => {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+}
+
+const selectType = (type: string) => {
+  if(type === 'todo'){
+    selectItemType.value = 'todo'
+  }else if(type === 'memo'){
+    selectItemType.value = 'memo'
+  }else{
+    selectItemType.value = null
+  }
+}
 
 </script>
 
@@ -233,12 +273,13 @@ const formatedListDate = (id: number) => {
       </form>
 
         <div>
-        <h2>{{ selectedDate }}の予定</h2>
+        <h2 class="item-header">{{ selectedDate }}の予定</h2>
         <hr>
         <ul class="item-list">
           <li v-for="todo in selectedDateTodos" :key="todo.id">
             {{ formatedListDate(todo.id) }}
-            {{ `[${todo.type}] ${todo.title}` }}
+            [{{ todo.type === 'todo' ? '予定' :'メモ' }}]
+            {{ todo.title }}
             <button @click="delItem(todo.id)">削除</button>
             <button @click="editMode(todo.id)">編集</button>
           </li>
@@ -251,10 +292,17 @@ const formatedListDate = (id: number) => {
   <div>
     <h2>予定一覧</h2>
     <hr>
+    <div class="item-header">
+      <button class="button-link" @click="toggleSortOrder">日付でソート</button>｜
+      <button class="button-link" @click="selectType('todo')">予定を表示</button>｜
+      <button class="button-link" @click="selectType('memo')">メモを表示</button>｜
+      <button class="button-link" @click="selectType('all')">全て表示</button>
+    </div>
     <ul class="item-list">
-      <li v-for="todo in todos" :key="todo.id">
+      <li v-for="todo in filteredSortedItems" :key="todo.id">
         {{ formatedListDate(todo.id) }}
-        {{ `[${todo.type}] ${todo.title}` }}
+        ［{{ todo.type === 'todo' ? '予定' :'メモ' }}］
+        {{ todo.title }}
         <button @click="delItem(todo.id)">削除</button>
         <button @click="editMode(todo.id)">編集</button>
       </li>
@@ -350,6 +398,21 @@ h1 {margin:0 5px;font-size:24px;white-space: nowrap;}
   font: inherit;
 }
 
+button, .button {
+  cursor: pointer;
+}
+
+.button-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
 .item-list {
   width: 96%;
   display: grid;
@@ -385,6 +448,10 @@ h1 {margin:0 5px;font-size:24px;white-space: nowrap;}
   display: flex;
   justify-content: space-between;
   gap: 12px;
+}
+
+.item-header{
+  margin:10px auto;
 }
 
 .item-title-wrap {
