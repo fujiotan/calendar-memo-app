@@ -2,9 +2,7 @@ import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   CalendarItem,
-  FilterImageType,
   ItemType,
-  SortOrder
 } from '../types/calendar'
 import { formatDateKey } from '../utils/date'  
 
@@ -39,9 +37,7 @@ const loadCalendarItems = (): CalendarItem[] => {
 
 export const useCalendarStore = defineStore('calendar', () => {
 
-  const today = new Date()
-
-  const selectedDate = ref<string>(formatDateKey(today)) //2000-01-01
+  const selectedDate = ref<string>(formatDateKey(new Date()))//2000-01-01
   const itemType = ref<ItemType>('todo')
   const title = ref<string>('')
   const content = ref<string>('')
@@ -70,12 +66,12 @@ export const useCalendarStore = defineStore('calendar', () => {
   }
 
   const selectedDateItems = computed(() => {
-      return items.value.filter(item => item.date === selectedDate.value
-    )
+      return items.value.filter(item => item.date === selectedDate.value)
   })
 
   const filteredSortedItems = computed(() => {
     let cloned: CalendarItem[] = []
+    
     if(selectedFilterType.value === 'todo') {
       cloned = items.value.filter(item => item.type === 'todo')
     }else if(selectedFilterType.value === 'memo') {
@@ -83,7 +79,7 @@ export const useCalendarStore = defineStore('calendar', () => {
     }else {
       cloned = [...items.value]
     }
-
+    console.log('87')
     return cloned.sort((a, b) => {
       console.log(a.date)
       const timeA = new Date(a.date).getTime()
@@ -139,8 +135,10 @@ const startEdit = (id: number): void => {
     resetForm()
   }
 
-  const toggleSortOrder = () => {
+  const toggleSortOrder = (): void => {
+    console.log(sortOrder.value)
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+    console.log(sortOrder.value)
   }
 
   const selectType = (type: 'todo' | 'memo' | 'all'): void => {
@@ -150,7 +148,6 @@ const startEdit = (id: number): void => {
     }
     selectedFilterType.value = type
   }
-
 
   return {
     selectedDate,
