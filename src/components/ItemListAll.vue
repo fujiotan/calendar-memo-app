@@ -7,8 +7,6 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'toggle-sort'): void
-  (e: 'select-type', type: 'todo' | 'memo' | 'all'): void
   (e: 'delete', id: number): void
   (e: 'edit', id: number): void
 }>()
@@ -18,12 +16,7 @@ const emit = defineEmits<{
 <template>
   <h2>予定一覧</h2>
   <hr>
-  <div class="item-header">
-    <button class="button-link" @click="emit('toggle-sort')">日付でソート</button>｜
-    <button class="button-link" @click="emit('select-type', 'todo')">予定を表示</button>｜
-    <button class="button-link" @click="emit('select-type', 'memo')">メモを表示</button>｜
-    <button class="button-link" @click="emit('select-type', 'all')">全て表示</button>
-  </div>
+  
   <ul class="item-list">
     <li v-for="todo in filteredSortedItems" :key="todo.id">
       {{ formatMonthDay(todo.date) }}

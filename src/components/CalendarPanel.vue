@@ -2,18 +2,17 @@
 import type { CalendarCell } from '../types/calendar';
 
 defineProps<{
+  weekDays: string[]
   currentYear: number
   currentMonth: number
-  weekDays: string[]
   calendarCells: CalendarCell[]
-  selectedDate?: string
-  currentMonthFirst: Date
+  selectedDate: string
 }>()
 
 const emit = defineEmits<{
   (e: 'prev-month'): void
   (e: 'next-month'): void
-  (e: 'set-selected-date', dateKey: string): void
+  (e: 'selected-date', dateKey: string): void
 }>()
 </script>
 
@@ -25,7 +24,7 @@ const emit = defineEmits<{
   </div>
 
   <div class="week-row">
-    <div v-for="label in weekDays">
+    <div v-for="label in weekDays" :key="label">
       {{ label }}
     </div>
   </div>
@@ -38,7 +37,7 @@ const emit = defineEmits<{
         today: cell.isToday,
         selected: cell.dateKey === selectedDate
       }"
-      @click="emit('set-selected-date', cell.dateKey)"
+      @click="emit('selected-date', cell.dateKey)"
     >
       <span>{{ cell.dayNumber }}</span>
     </div>

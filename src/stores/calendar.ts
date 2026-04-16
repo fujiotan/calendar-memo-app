@@ -88,6 +88,10 @@ export const useCalendarStore = defineStore('calendar', () => {
     })
   })
 
+const getItemById = (id: number) => {
+  return items.value.find(item => item.id === id)
+}
+
   const addItem = (type: ItemType, titleValue: string, contentValue: string, dateValue: string): void => {
     const newItem: CalendarItem = {
       id: Date.now(),
@@ -102,12 +106,19 @@ export const useCalendarStore = defineStore('calendar', () => {
     items.value.unshift(newItem)
   }
 
-  const updateItem = (type: ItemType, id: number, titleValue: string, contentValue: string) => {
+  const updateItem = (
+      id: number,
+      type: ItemType,
+      title: string,
+      content: string,
+      date: string
+    ): void => {
     const target = items.value.find(item => item.id === id)
     if(!target) return
     target.type = type
-    target.title = titleValue
-    target.content = contentValue
+    target.title = title
+    target.content = content
+    target.date = date
     target.updatedAt = new Date().toISOString()
   }
 
@@ -115,22 +126,22 @@ export const useCalendarStore = defineStore('calendar', () => {
     items.value = items.value.filter((item) => item.id !== id)
   }
 
-const startEdit = (id: number): void => {
-  const target = items.value.find(item => item.id === id)
-  if(!target) return
+  const startEdit = (id: number): void => {
+    const target = items.value.find(item => item.id === id)
+    if(!target) return
 
-  editId.value = id
-  itemType.value = target.type
-  title.value = target.title
-  content.value = target.content
-}
+    editId.value = id
+    itemType.value = target.type
+    title.value = target.title
+    content.value = target.content
+  }
 
   const submitItem = () => {
     if(!title.value.trim()) return
     if(editId.value === null) {
       addItem(itemType.value, title.value, content.value, selectedDate.value) 
     }else{
-      updateItem(itemType.value, editId.value, title.value, content.value)
+      updateItem(editId.value, itemType.value, title.value, content.value, selectedDate.value)
     }
     resetForm()
   }
@@ -160,6 +171,7 @@ const startEdit = (id: number): void => {
     selectedFilterType,
     selectedDateItems,
     filteredSortedItems,
+    getItemById,
     resetForm,
     setSelectedDate,
     addItem,

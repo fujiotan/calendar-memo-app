@@ -5,36 +5,42 @@ defineProps<{
   title: string
   content: string
   itemType: ItemType
-  editId: number | null
-  selectedDate: string
+  date: string
+  submitLabel: string
 }>()
 
 const emit = defineEmits<{
   (e: 'update:itemType', value: ItemType): void
+  (e: 'update:date', value: string):void
   (e: 'update:title', value: string): void
   (e: 'update:content', value: string): void
-  (e: 'submitItem'): void
+  (e: 'submit'): void
 }>()
 
 </script>
 
 <template>
-  <h2>選択日: {{ selectedDate }}</h2>
-  <form class="item-form" @submit.prevent="emit('submitItem')">
+  <form class="item-form" @submit.prevent="emit('submit')">
     <select :value="itemType" @change="emit('update:itemType', ($event.target as HTMLSelectElement).value as ItemType)">
       <option value="todo">Todo</option>
       <option value="memo">Memo</option>
     </select>
     <input
+      :value="date"
+      type="date"
+      @input="emit('update:date', ($event.target as HTMLInputElement).value)"
+    />
+    <input
       :value="title"
       type="text"
+      placeholder="タイトル"
       @input="emit('update:title', ($event.target as HTMLInputElement).value)"
     />
     <textarea
       :value="content"
       @input="emit('update:content', ($event.target as HTMLTextAreaElement).value)"
     ></textarea>
-    <button type="submit">{{ editId === null ? '追加' : '編集' }}</button>
+    <button type="submit">{{ submitLabel }}</button>
   </form>
 </template>
 
